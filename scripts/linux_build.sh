@@ -2,8 +2,8 @@
 set -e
 
 # Version requirements - centralized for easy maintenance
-cmake_min="3.25.0"
-target_cmake_version="3.30.1"
+cmake_min="4.0.0"
+target_cmake_version="4.3.0"
 doxygen_min="1.10.0"
 _doxygen_min="${doxygen_min//\./_}"  # Convert dots to underscores for URL
 doxygen_max="1.12.0"
@@ -172,12 +172,10 @@ function add_arch_deps() {
     "gcc${gcc_version}-libs"
     'git'
     'graphviz'
-    'libayatana-appindicator'
     'libcap'
     'libdrm'
     'libevdev'
     'libmfx'
-    'libnotify'
     'libpulse'
     'libva'
     'libx11'
@@ -194,6 +192,8 @@ function add_arch_deps() {
     'opus'
     'python-jinja'  # glad OpenGL/EGL loader generator
     'python-setuptools'  # glad OpenGL/EGL loader generated, v2.0.0
+    'qt6-base'
+    'qt6-svg'
     'udev'
     'wayland'
   )
@@ -233,7 +233,6 @@ function add_debian_based_deps() {
     "libevdev-dev"
     "libgbm-dev"
     "libminiupnpc-dev"
-    "libnotify-dev"
     "libnuma-dev"
     "libopus-dev"
     "libpipewire-0.3-dev"
@@ -253,6 +252,20 @@ function add_debian_based_deps() {
     "npm"  # web-ui
     "python3-jinja2"  # glad OpenGL/EGL loader generator
     "python3-setuptools"  # glad OpenGL/EGL loader generated, v2.0.0
+    "qt6-base-dev"
+  )
+
+  # Ubuntu 22.04 uses a different package name for Qt6 SVG
+  if [[ "$distro" == "ubuntu" ]] && [[ "$version" == "22.04" ]]; then
+    dependencies+=(
+      "libgl-dev"  # OpenGL development headers, needed for qt6-svg
+      "libqt6svg6-dev"
+    )
+  else
+    dependencies+=("qt6-svg-dev")
+  fi
+
+  dependencies+=(
     "systemd"
     "udev"
     "wget"  # necessary for cuda install with `run` file
@@ -279,18 +292,17 @@ function add_debian_deps() {
   add_test_ppa
   add_debian_based_deps
   dependencies+=(
-    "libayatana-appindicator3-dev"
     "systemd-dev"
   )
   return 0
 }
 
 function add_ubuntu_deps() {
+  # Enable universe; qt6-base-dev and several other required packages live there.
+  $package_install_command "software-properties-common"
+  ${sudo_cmd} add-apt-repository universe -y
   add_test_ppa
   add_debian_based_deps
-  dependencies+=(
-    "libappindicator3-dev"
-  )
   return 0
 }
 
@@ -304,13 +316,11 @@ function add_fedora_deps() {
     "gcc${gcc_version}-c++"
     "git"
     "graphviz"
-    "libappindicator-gtk3-devel"
     "libappstream-glib"
     "libcap-devel"
     "libcurl-devel"
     "libdrm-devel"
     "libevdev-devel"
-    "libnotify-devel"
     "libX11-devel"  # X11
     "libxcb-devel"  # X11
     "libXcursor-devel"  # X11
@@ -331,6 +341,8 @@ function add_fedora_deps() {
     "pulseaudio-libs-devel"
     "python3-jinja2"  # glad OpenGL/EGL loader generator
     "python3-setuptools"  # glad OpenGL/EGL loader generated, v2.0.0
+    "qt6-qtbase-devel"
+    "qt6-qtsvg-devel"
     "rpm-build"  # if you want to build an RPM binary package
     "wget"  # necessary for cuda install with `run` file
     "which"  # necessary for cuda install with `run` file
