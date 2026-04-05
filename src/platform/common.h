@@ -310,6 +310,10 @@ namespace platf {
     std::uint8_t type;
     std::uint16_t capabilities;
     std::uint32_t supportedButtons;
+
+    // Optional firmware info from the client's physical controller
+    // (raw 64-byte feature report 0x20). Empty if not provided.
+    std::vector<std::uint8_t> firmwareInfo;
   };
 
   struct gamepad_touch_t {

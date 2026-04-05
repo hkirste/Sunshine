@@ -867,6 +867,9 @@ namespace input {
    * @param input The input context pointer.
    * @param packet The controller arrival packet.
    */
+  // Controller metadata TLV tags (appended after the fixed arrival fields)
+  constexpr uint8_t CTRL_META_TAG_FIRMWARE_INFO = 0x01;  // 64-byte raw feature report 0x20
+
   void passthrough(std::shared_ptr<input_t> &input, PSS_CONTROLLER_ARRIVAL_PACKET packet) {
     if (!config::input.controller) {
       return;
@@ -887,6 +890,39 @@ namespace input {
       util::endian::little(packet->capabilities),
       util::endian::little(packet->supportedButtonFlags),
     };
+
+    // Parse TLV metadata extensions trailing the fixed arrival fields.
+    // The header.size field gives the total payload size (excluding itself).
+    uint32_t totalSize = util::endian::big(packet->header.size) + sizeof(packet->header.size);
+    if (totalSize > sizeof(SS_CONTROLLER_ARRIVAL_PACKET)) {
+      auto *tlv = reinterpret_cast<const uint8_t *>(packet) + sizeof(SS_CONTROLLER_ARRIVAL_PACKET);
+      auto *end = reinterpret_cast<const uint8_t *>(packet) + totalSize;
+
+      while (tlv + 4 <= end) {
+        uint8_t tag = tlv[0];
+        uint16_t length = util::endian::little(*reinterpret_cast<const uint16_t *>(tlv + 2));
+
+        if (tlv + 4 + length > end) {
+          BOOST_LOG(warning) << "Truncated controller metadata TLV"sv;
+          break;
+        }
+
+        const uint8_t *value = tlv + 4;
+
+        switch (tag) {
+          case CTRL_META_TAG_FIRMWARE_INFO:
+            if (length == 64) {
+              arrival.firmwareInfo.assign(value, value + 64);
+              BOOST_LOG(info) << "Received firmware info from client controller"sv;
+            }
+            break;
+          default:
+            break;  // Skip unknown tags for forward compatibility
+        }
+
+        tlv += 4 + length;
+      }
+    }
 
     auto id = alloc_id(gamepadMask);
     if (id < 0) {

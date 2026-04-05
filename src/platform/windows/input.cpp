@@ -573,7 +573,7 @@ namespace platf {
       return false;
     }
 
-    int alloc_gamepad(const gamepad_id_t &id, feedback_queue_t &feedback_queue) {
+    int alloc_gamepad(const gamepad_id_t &id, const gamepad_arrival_t &metadata, feedback_queue_t &feedback_queue) {
       auto &ctx = gamepads[id.globalIndex];
       assert(!ctx.is_active());
 
@@ -590,6 +590,13 @@ namespace platf {
       gp_info.MacAddress[3] = 0x00;
       gp_info.MacAddress[4] = 0x00;
       gp_info.MacAddress[5] = (UCHAR) (id.globalIndex & 0xFF);
+
+      // Pass through firmware info from the client's physical controller
+      if (metadata.firmwareInfo.size() == 64) {
+        gp_info.FirmwareInfo = metadata.firmwareInfo.data();
+        gp_info.FirmwareInfoLength = 64;
+      }
+
 
       ctx.ps5 = WinUHidPS5Create(&gp_info, rumble_cb, lightbar_cb, player_led_cb, trigger_effect_cb, &ctx);
       if (!ctx.ps5) {
@@ -1365,7 +1372,7 @@ namespace platf {
 #ifdef SUNSHINE_WINUHID
     if (raw->winuhid && raw->winuhid->available && winuhid_t::should_use_ds5(metadata)) {
       BOOST_LOG(info) << "Gamepad " << id.globalIndex << " will be DualSense controller via WinUHid"sv;
-      if (raw->winuhid->alloc_gamepad(id, feedback_queue) == 0) {
+      if (raw->winuhid->alloc_gamepad(id, metadata, feedback_queue) == 0) {
         return 0;
       }
       BOOST_LOG(warning) << "WinUHid DualSense creation failed, falling back to ViGEm"sv;
