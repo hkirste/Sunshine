@@ -107,6 +107,8 @@ namespace platf {
     set_motion_event_state,  ///< Set motion event state
     set_rgb_led,  ///< Set RGB LED
     set_adaptive_triggers,  ///< Set adaptive triggers
+    set_player_led,  ///< Set player indicator LEDs
+    set_mic_led,  ///< Set mic mute LED
   };
 
   struct gamepad_feedback_msg_t {
@@ -151,6 +153,22 @@ namespace platf {
       return msg;
     }
 
+    static gamepad_feedback_msg_t make_player_led(std::uint16_t id, std::uint8_t led_value) {
+      gamepad_feedback_msg_t msg;
+      msg.type = gamepad_feedback_e::set_player_led;
+      msg.id = id;
+      msg.data.player_led = {led_value};
+      return msg;
+    }
+
+    static gamepad_feedback_msg_t make_mic_led(std::uint16_t id, std::uint8_t led_state) {
+      gamepad_feedback_msg_t msg;
+      msg.type = gamepad_feedback_e::set_mic_led;
+      msg.id = id;
+      msg.data.mic_led = {led_state};
+      return msg;
+    }
+
     gamepad_feedback_e type;
     std::uint16_t id;
 
@@ -184,6 +202,14 @@ namespace platf {
         std::array<uint8_t, 10> left;
         std::array<uint8_t, 10> right;
       } adaptive_triggers;
+
+      struct {
+        std::uint8_t led_value;
+      } player_led;
+
+      struct {
+        std::uint8_t led_state;
+      } mic_led;
     } data;
   };
 

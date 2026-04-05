@@ -522,8 +522,14 @@ namespace platf {
       }
     }
 
-    static void CALLBACK player_led_cb(PVOID /* ctx */, UCHAR /* ledValue */) {
-      // Moonlight protocol doesn't support player LED feedback yet
+    static void CALLBACK player_led_cb(PVOID ctx, UCHAR ledValue) {
+      auto *gp = static_cast<winuhid_gamepad_context_t *>(ctx);
+      gp->feedback_queue->raise(gamepad_feedback_msg_t::make_player_led(gp->client_relative_index, ledValue));
+    }
+
+    static void CALLBACK mic_led_cb(PVOID ctx, UCHAR ledState) {
+      auto *gp = static_cast<winuhid_gamepad_context_t *>(ctx);
+      gp->feedback_queue->raise(gamepad_feedback_msg_t::make_mic_led(gp->client_relative_index, ledState));
     }
 
     static void CALLBACK trigger_effect_cb(PVOID ctx, PCWINUHID_PS5_TRIGGER_EFFECT left, PCWINUHID_PS5_TRIGGER_EFFECT right) {
@@ -598,7 +604,7 @@ namespace platf {
       }
 
 
-      ctx.ps5 = WinUHidPS5Create(&gp_info, rumble_cb, lightbar_cb, player_led_cb, trigger_effect_cb, &ctx);
+      ctx.ps5 = WinUHidPS5Create(&gp_info, rumble_cb, lightbar_cb, player_led_cb, trigger_effect_cb, mic_led_cb, &ctx);
       if (!ctx.ps5) {
         BOOST_LOG(error) << "Failed to create WinUHid PS5 gamepad: "sv << GetLastError();
         return -1;
