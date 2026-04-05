@@ -1701,10 +1701,12 @@ namespace platf {
       auto flags = gamepad_state.buttonFlags;
 
       // Sticks: Moonlight sends int16 (-32768..32767), DualSense expects uint8 (0-255, center=0x80)
+      // X: -32768=left→0, 32767=right→255 (same direction)
+      // Y: XInput positive=up, but HID 0=up/255=down, so Y must be inverted
       r.LeftStickX = (uint8_t) ((gamepad_state.lsX + 32768) >> 8);
-      r.LeftStickY = (uint8_t) ((gamepad_state.lsY + 32768) >> 8);
+      r.LeftStickY = 255 - (uint8_t) ((gamepad_state.lsY + 32768) >> 8);
       r.RightStickX = (uint8_t) ((gamepad_state.rsX + 32768) >> 8);
-      r.RightStickY = (uint8_t) ((gamepad_state.rsY + 32768) >> 8);
+      r.RightStickY = 255 - (uint8_t) ((gamepad_state.rsY + 32768) >> 8);
 
       // Triggers: already 0-255
       r.LeftTrigger = gamepad_state.lt;
@@ -1727,8 +1729,8 @@ namespace platf {
       r.ButtonShare = !!(flags & BACK);
       r.ButtonOptions = !!(flags & START);
       r.ButtonHome = !!(flags & HOME);
-      r.ButtonTouchpad = !!(flags & (TOUCHPAD_BUTTON | MISC_BUTTON));
-      r.ButtonMute = 0;
+      r.ButtonTouchpad = !!(flags & TOUCHPAD_BUTTON);
+      r.ButtonMute = !!(flags & MISC_BUTTON);
 
       int hatX = 0;
       int hatY = 0;
