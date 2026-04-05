@@ -1,7 +1,7 @@
 # windows specific dependencies
 
 # MinHook setup - use installed minhook for AMD64, otherwise download minhook-detours for ARM64
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64")
+if(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "ARM64|aarch64")
     # Make sure MinHook is installed for x86/x64
     find_library(MINHOOK_LIBRARY libMinHook.a REQUIRED)
     find_path(MINHOOK_INCLUDE_DIR MinHook.h PATH_SUFFIXES include REQUIRED)

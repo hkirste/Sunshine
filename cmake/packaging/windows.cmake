@@ -5,7 +5,7 @@ install(TARGETS sunshine RUNTIME DESTINATION "." COMPONENT application)
 install(FILES "${ZLIB}" DESTINATION "." COMPONENT application)
 
 # ARM64: include minhook-detours DLL (shared library for ARM64)
-if(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64" AND DEFINED _MINHOOK_DLL)
+if(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64|x86_64" AND DEFINED _MINHOOK_DLL)
     install(FILES "${_MINHOOK_DLL}" DESTINATION "." COMPONENT application)
 endif()
 
@@ -119,4 +119,4 @@ set(CPACK_COMPONENT_GAMEPAD_GROUP "Scripts")
 
 # include specific packaging
 include(${CMAKE_MODULE_PATH}/packaging/windows_nsis.cmake)
-include(${CMAKE_MODULE_PATH}/packaging/windows_wix.cmake)
+# include(${CMAKE_MODULE_PATH}/packaging/windows_wix.cmake)  # disabled for local build
